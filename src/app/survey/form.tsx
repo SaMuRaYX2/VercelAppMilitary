@@ -1,23 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import { MAX_TEXT, SECTIONS, TOTAL, type Question } from "@/lib/questions";
 import { saveAnswer, saveClientInfo, submitSurvey } from "./actions";
 
 type Status = "saved" | "saving" | "error";
 
 export function SurveyForm({
-  userName,
   initialAnswers,
   submitted,
 }: {
-  userName: string;
   initialAnswers: Record<string, string>;
   submitted: boolean;
 }) {
-  const router = useRouter();
   const [answers, setAnswers] = useState(initialAnswers);
   const [status, setStatus] = useState<Record<string, Status>>({});
   const [done, setDone] = useState(submitted);
@@ -62,29 +57,16 @@ export function SurveyForm({
     }
   }
 
-  async function signOut() {
-    await authClient.signOut();
-    router.push("/");
-    router.refresh();
-  }
-
   return (
     <div className="mx-auto max-w-2xl px-4 pb-32 pt-6">
-      <header className="flex items-center justify-between gap-4 border-b border-line pb-4">
-        <span className="truncate text-sm text-muted">{userName}</span>
-        <button type="button" onClick={signOut} className="shrink-0 text-sm text-muted underline underline-offset-4 hover:text-ink">
-          Вийти
-        </button>
-      </header>
-
       {done && (
-        <div className="mt-6 rounded-2xl border border-olive/40 bg-olive/10 px-5 py-4">
+        <div className="mt-2 rounded-2xl border border-olive/40 bg-olive/10 px-5 py-4">
           <p className="font-medium text-olive">Анкету надіслано. Дякуємо!</p>
           <p className="mt-1 text-sm text-muted">Ви можете й далі змінювати відповіді — вони зберігаються автоматично.</p>
         </div>
       )}
 
-      <div className="sticky top-0 z-10 -mx-4 mb-8 mt-6 bg-canvas/90 px-4 py-3 backdrop-blur">
+      <div className="sticky top-14 z-10 -mx-4 mb-8 mt-6 bg-canvas/90 px-4 py-3 backdrop-blur">
         <div className="flex items-baseline justify-between text-sm">
           <span className="font-medium">Заповнено</span>
           <span className="tabular-nums text-muted">

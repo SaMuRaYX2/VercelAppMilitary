@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, Unbounded } from "next/font/google";
 import { ConsentDialog } from "./consent-dialog";
+import { Header } from "./header";
 import { getUser } from "@/lib/session";
 import "./globals.css";
 
@@ -25,6 +26,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="uk" className={`${body.variable} ${display.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
+        <Header user={user ? { name: user.name, role: user.role } : null} />
         {children}
         {!user && <ConsentDialog />}
       </body>

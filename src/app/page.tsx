@@ -17,18 +17,13 @@ export default async function Home() {
         {TOTAL} питань, згрупованих у {SECTIONS.length} розділів. Відповіді зберігаються автоматично.
       </p>
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div className="mt-8">
         <Link
           href={user ? "/survey" : "/sign-in"}
-          className="rounded-xl bg-olive px-6 py-3.5 font-medium text-olive-ink transition-opacity hover:opacity-90"
+          className="inline-block rounded-xl bg-olive px-6 py-3.5 font-medium text-olive-ink transition-opacity hover:opacity-90"
         >
           {user ? "Продовжити анкету" : "Почати"}
         </Link>
-        {user?.role === "admin" && (
-          <Link href="/admin" className="rounded-xl border border-line px-6 py-3.5 font-medium hover:bg-paper">
-            Панель адміністратора
-          </Link>
-        )}
       </div>
 
       <ol className="mt-14 divide-y divide-line border-y border-line">

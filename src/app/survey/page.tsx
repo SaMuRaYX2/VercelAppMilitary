@@ -16,11 +16,5 @@ export default async function SurveyPage() {
     [user.id, meta.ip, meta.country, meta.city, meta.userAgent, meta.acceptLanguage, meta.visitorId, meta.firstSeenAt],
   );
 
-  return (
-    <SurveyForm
-      userName={user.name}
-      initialAnswers={rows[0].answers}
-      submitted={!!rows[0].submitted_at}
-    />
-  );
+  return <SurveyForm initialAnswers={rows[0].answers} submitted={!!rows[0].submitted_at} />;
 }
