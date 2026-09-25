@@ -30,6 +30,19 @@ export const auth = betterAuth({
   account: {
     accountLinking: { enabled: true, trustedProviders: ["google"], requireLocalEmailVerified: false },
   },
+  // On Vercel each instance has its own memory, so keep the counter in Postgres.
+  // Limits are generous enough for normal use but still curb password brute-force.
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    window: 60,
+    max: 120,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 15 },
+      "/sign-up/email": { window: 60, max: 15 },
+      "/sign-in/social": { window: 60, max: 30 },
+    },
+  },
   user: {
     additionalFields: {
       // Promoted to "admin" only by hand in the database, never from the client.
