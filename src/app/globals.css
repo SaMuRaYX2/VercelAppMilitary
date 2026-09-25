@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #e6e9e1;
+  --paper: #f6f7f2;
+  --ink: #1d271c;
+  --muted: #566251;
+  --line: #c6ccbf;
+  --olive: #3d5233;
+  --olive-ink: #f6f7f2;
+  --signal: #f2c230;
+  --danger: #a8321e;
+  --focus: #3d5233;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #121812;
+    --paper: #1a221a;
+    --ink: #e3e8dc;
+    --muted: #9aa692;
+    --line: #2f3b2e;
+    --olive: #a9c08f;
+    --olive-ink: #121812;
+    --danger: #f08a73;
+    --focus: #f2c230;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-olive: var(--olive);
+  --color-olive-ink: var(--olive-ink);
+  --color-signal: var(--signal);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display-face);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+dialog::backdrop {
+  background: rgb(10 14 10 / 0.72);
+  backdrop-filter: blur(3px);
+}
