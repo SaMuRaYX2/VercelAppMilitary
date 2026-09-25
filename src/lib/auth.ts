@@ -17,10 +17,23 @@ const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
 
 const profileField = { type: "string" as const, required: false, input: false as const };
 
+// Origins allowed to call the auth endpoints. Vercel gives each deployment its
+// own host, so trust the current deployment and the stable production domain
+// from its env vars — otherwise sign-in fails with "Invalid origin".
+const vercelHost = (h?: string) => (h ? `https://${h}` : undefined);
+const trustedOrigins = [
+  process.env.BETTER_AUTH_URL,
+  vercelHost(process.env.VERCEL_URL),
+  vercelHost(process.env.VERCEL_PROJECT_PRODUCTION_URL),
+  vercelHost(process.env.VERCEL_BRANCH_URL),
+  "http://localhost:3000",
+].filter((o): o is string => !!o);
+
 export const googleEnabled = !!google;
 
 export const auth = betterAuth({
   database: pool,
+  trustedOrigins,
   emailAndPassword: { enabled: true, minPasswordLength: 8 },
   socialProviders: google ? { google } : {},
   // Let a Google sign-in attach to an existing email/password account with the
