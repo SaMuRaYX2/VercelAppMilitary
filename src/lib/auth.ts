@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { pool } from "./db.ts";
+import { sendVerificationEmail } from "./email.ts";
 
 const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
   ? {
@@ -34,14 +35,24 @@ export const googleEnabled = !!google;
 export const auth = betterAuth({
   database: pool,
   trustedOrigins,
-  emailAndPassword: { enabled: true, minPasswordLength: 8 },
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 8,
+    // Email/password users must confirm their address before they can sign in.
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: ({ user, url }) => sendVerificationEmail(user.email, url),
+  },
   socialProviders: google ? { google } : {},
-  // Let a Google sign-in attach to an existing email/password account with the
-  // same address (Google verifies the email), so one person = one account.
-  // ponytail: opens a narrow pre-registration takeover vector because we don't
-  // verify email/password signups; close it by enabling email verification.
+  // A Google sign-in attaches to an existing email/password account with the
+  // same address only once that account's email is verified (requireLocalEmailVerified
+  // defaults to true), so one person = one account without a takeover window.
   account: {
-    accountLinking: { enabled: true, trustedProviders: ["google"], requireLocalEmailVerified: false },
+    accountLinking: { enabled: true, trustedProviders: ["google"] },
   },
   // On Vercel each instance has its own memory, so keep the counter in Postgres.
   // Limits are generous enough for normal use but still curb password brute-force.

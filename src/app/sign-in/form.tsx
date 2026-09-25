@@ -10,6 +10,7 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [error, setError] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -23,16 +24,51 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
 
     const res =
       mode === "register"
-        ? await authClient.signUp.email({ email, password, name })
-        : await authClient.signIn.email({ email, password });
+        ? await authClient.signUp.email({ email, password, name, callbackURL: "/survey" })
+        : await authClient.signIn.email({ email, password, callbackURL: "/survey" });
+
+    setBusy(false);
 
     if (res.error) {
-      setBusy(false);
+      // Unverified email: Better Auth resends the link (sendOnSignIn) — show the check-inbox screen.
+      if (res.error.status === 403 || res.error.code === "EMAIL_NOT_VERIFIED") {
+        setSentTo(email);
+        return;
+      }
       setError(res.error.message || "Не вдалося увійти. Перевірте дані.");
+      return;
+    }
+
+    // Registration with verification returns no active session — ask them to confirm.
+    if (mode === "register") {
+      setSentTo(email);
       return;
     }
     router.push("/survey");
     router.refresh();
+  }
+
+  if (sentTo) {
+    return (
+      <div className="mt-8 rounded-2xl border border-line bg-paper p-6">
+        <div className="mb-4 h-1.5 w-12 rounded-full bg-signal" aria-hidden />
+        <h2 className="font-display text-lg font-semibold">Підтвердіть пошту</h2>
+        <p className="mt-3 leading-relaxed text-muted">
+          Ми надіслали лист із посиланням на <span className="text-ink">{sentTo}</span>. Відкрийте його й
+          підтвердіть пошту, щоб продовжити. Перевірте також папку «Спам».
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setSentTo(null);
+            setError(null);
+          }}
+          className="mt-6 text-sm text-muted underline underline-offset-4 hover:text-ink"
+        >
+          ← Назад
+        </button>
+      </div>
+    );
   }
 
   async function google() {
