@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { pool } from "@/lib/db";
-import { QUESTIONS, SECTIONS } from "@/lib/questions";
 import { getAdmin } from "@/lib/session";
 import { visitorLabel } from "@/lib/visitor";
+import { AnswersEditor, DeleteUserButton, ProfileEditor } from "./admin-controls";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +12,7 @@ const PROVIDER_LABEL: Record<string, string> = { google: "Google", credential: "
 type Detail = {
   name: string;
   email: string;
+  role: string;
   email_verified: boolean;
   image: string | null;
   given_name: string | null;
@@ -40,7 +41,7 @@ export default async function RespondentPage({ params }: PageProps<"/admin/[user
   const { userId } = await params;
 
   const { rows } = await pool.query<Detail>(
-    `select u.name, u.email, u."emailVerified" as email_verified, u.image,
+    `select u.name, u.email, u.role, u."emailVerified" as email_verified, u.image,
             u."givenName" as given_name, u."familyName" as family_name, u.locale,
             u."googleId" as google_id, u."createdAt" as registered_at,
             (select string_agg(distinct a."providerId", ',') from account a where a."userId" = r.user_id) as providers,
@@ -111,26 +112,13 @@ export default async function RespondentPage({ params }: PageProps<"/admin/[user
         </dl>
       </section>
 
-      <div className="mt-10 flex flex-col gap-8">
-        {SECTIONS.map((section) => (
-          <section key={section.id}>
-            <h2 className="mb-4 font-display text-base font-semibold">
-              {section.id}. {section.title}
-            </h2>
-            <div className="flex flex-col gap-4">
-              {section.questions.map((q) => {
-                const a = d.answers[q.id];
-                return (
-                  <div key={q.id} className="border-l-2 border-line pl-4">
-                    <p className="text-sm text-muted">{QUESTIONS.get(q.id)?.text}</p>
-                    <p className={a ? "mt-1 whitespace-pre-wrap" : "mt-1 text-muted/60"}>{a || "— без відповіді —"}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
+      <ProfileEditor userId={userId} name={d.name} email={d.email} role={d.role} />
+
+      <h2 className="mt-12 font-display text-lg font-semibold">Відповіді</h2>
+      <p className="mt-1 text-sm text-muted">Зміни зберігаються автоматично.</p>
+      <AnswersEditor userId={userId} answers={d.answers} />
+
+      <DeleteUserButton userId={userId} name={d.name} />
     </main>
   );
 }

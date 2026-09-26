@@ -46,64 +46,60 @@ export default async function AdminPage() {
       {rows.length === 0 ? (
         <p className="mt-10 text-muted">Ще немає жодної відповіді.</p>
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-2xl border border-line">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-paper text-left text-muted">
-              <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:font-medium">
-                <th>Респондент</th>
-                <th>Заповнено</th>
-                <th>Статус</th>
-                <th>Вхід</th>
-                <th>Відвідувач</th>
-                <th>Локація</th>
-                <th>IP</th>
-                <th>Оновлено</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {rows.map((r) => (
-                <tr key={r.user_id} className="transition-colors hover:bg-paper [&>td]:px-4 [&>td]:py-3">
-                  <td>
-                    <Link href={`/admin/${r.user_id}`} className="font-medium text-olive underline-offset-4 hover:underline">
-                      {r.name}
-                    </Link>
-                    <div className="text-xs text-muted">{r.email}</div>
-                  </td>
-                  <td className="tabular-nums">
+        <div className="mt-8 divide-y divide-line overflow-hidden rounded-2xl border border-line">
+          {rows.map((r) => (
+            <Link
+              key={r.user_id}
+              href={`/admin/${r.user_id}`}
+              className="block p-4 transition-colors hover:bg-paper focus-visible:bg-paper sm:px-5"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-ink">{r.name}</p>
+                  <p className="truncate text-sm text-muted">{r.email}</p>
+                </div>
+                {r.submitted_at ? (
+                  <span className="shrink-0 rounded-md bg-olive/15 px-2 py-0.5 text-xs text-olive">Надіслано</span>
+                ) : (
+                  <span className="shrink-0 rounded-md bg-signal/20 px-2 py-0.5 text-xs">Чернетка</span>
+                )}
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted">
+                <Chip>
+                  <span className="tabular-nums text-ink">
                     {r.answered} / {TOTAL}
-                  </td>
-                  <td>
-                    {r.submitted_at ? (
-                      <span className="rounded-md bg-olive/15 px-2 py-0.5 text-xs text-olive">Надіслано</span>
-                    ) : (
-                      <span className="rounded-md bg-signal/20 px-2 py-0.5 text-xs">Чернетка</span>
-                    )}
-                  </td>
-                  <td className="text-muted">
-                    {(r.providers?.split(",") ?? []).map((p) => PROVIDER_LABEL[p] ?? p).join(", ") || "—"}
-                  </td>
-                  <td>
-                    <VisitorBadge label={visitorLabel(r.first_seen_at, r.started_at)} firstSeen={r.first_seen_at} />
-                  </td>
-                  <td className="text-muted">{[r.city, r.country].filter(Boolean).join(", ") || "—"}</td>
-                  <td className="font-mono text-xs text-muted">{r.ip || "—"}</td>
-                  <td className="whitespace-nowrap text-muted">{r.updated_at.toLocaleString("uk-UA")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </span>{" "}
+                  заповнено
+                </Chip>
+                <Chip>{(r.providers?.split(",") ?? []).map((p) => PROVIDER_LABEL[p] ?? p).join(", ") || "—"}</Chip>
+                <VisitorBadge label={visitorLabel(r.first_seen_at, r.started_at)} firstSeen={r.first_seen_at} />
+                {[r.city, r.country].filter(Boolean).length > 0 && (
+                  <Chip>{[r.city, r.country].filter(Boolean).join(", ")}</Chip>
+                )}
+                {r.ip && <Chip mono>{r.ip}</Chip>}
+                <span className="ml-auto whitespace-nowrap">{r.updated_at.toLocaleString("uk-UA")}</span>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </main>
   );
 }
 
+function Chip({ children, mono }: { children: React.ReactNode; mono?: boolean }) {
+  return (
+    <span className={`rounded-md bg-canvas px-2 py-0.5 ${mono ? "font-mono" : ""}`}>{children}</span>
+  );
+}
+
 function VisitorBadge({ label, firstSeen }: { label: "Новий" | "Повторний" | null; firstSeen: Date | null }) {
-  if (!label) return <span className="text-muted">—</span>;
+  if (!label) return null;
   const cls = label === "Новий" ? "bg-olive/15 text-olive" : "bg-line text-muted";
   return (
     <span
-      className={`rounded-md px-2 py-0.5 text-xs ${cls}`}
+      className={`rounded-md px-2 py-0.5 ${cls}`}
       title={firstSeen ? `Перший візит: ${firstSeen.toLocaleString("uk-UA")}` : ""}
     >
       {label}
