@@ -99,15 +99,24 @@ export async function adminUpdateUser(userId: string, patch: { name: string; ema
   let result: Result;
   try {
     result = await tx(async (c) => {
-      const { rows } = await c.query<{ email: string }>(`select email from "user" where id = $1 for update`, [userId]);
-      const old = rows[0]?.email;
-      if (old === undefined) return NOT_FOUND;
+      const { rows } = await c.query<{ email: string; role: string }>(
+        `select email, role from "user" where id = $1 for update`,
+        [userId],
+      );
+      if (!rows[0]) return NOT_FOUND;
+      const old = rows[0].email;
       if (old === email) {
         await c.query(`update "user" set name = $2 where id = $1`, [userId, name]);
         return OK;
       }
-      // A new address is unconfirmed. Otherwise an admin could set someone's email to a
-      // Google account they own and sign in as that person through Google account linking.
+      // Whoever controls the address can take the account: /send-verification-email needs no
+      // session and verifying signs in (autoSignInAfterVerification); with emailVerified kept,
+      // Google account linking would do the same. So never repoint another admin's email.
+      // ponytail: an admin can still take over a regular user's account this way; accepted,
+      // since admins already read and edit all user data.
+      if (rows[0].role === "admin" && userId !== admin.id) {
+        return { ok: false, error: "Пошту іншого адміністратора змінювати не можна. Спершу зніміть роль." };
+      }
       await c.query(`update "user" set name = $2, email = $3, "emailVerified" = false where id = $1`, [
         userId,
         name,
