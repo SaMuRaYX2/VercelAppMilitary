@@ -69,7 +69,8 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      // Promoted to "admin" only by hand in the database, never from the client.
+      // Never set by the user. Changed only by an admin (setUserRole in app/admin/actions.ts)
+      // or by hand for the first admin (npm run db:setup -- email).
       role: { type: "string", defaultValue: "user", input: false },
       // Filled from the Google profile on sign-in; null for email/password users.
       givenName: profileField,

@@ -4,31 +4,28 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SECTIONS } from "@/lib/questions";
 import { QuestionField, type Status } from "../../question-field";
-import { adminUpdateAnswer, adminUpdateUser, deleteRespondent } from "../actions";
+import { adminUpdateAnswer, adminUpdateUser, deleteRespondent, setUserRole } from "../actions";
 
 export function ProfileEditor({
   userId,
   name: initialName,
   email: initialEmail,
-  role: initialRole,
 }: {
   userId: string;
   name: string;
   email: string;
-  role: string;
 }) {
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
-  const [role, setRole] = useState(initialRole);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const dirty = name !== initialName || email !== initialEmail || role !== initialRole;
+  const dirty = name !== initialName || email !== initialEmail;
 
   async function save() {
     setBusy(true);
     setMsg(null);
-    const res = await adminUpdateUser(userId, { name, email, role });
+    const res = await adminUpdateUser(userId, { name, email });
     setBusy(false);
     setMsg(res.ok ? { ok: true, text: "Збережено" } : { ok: false, text: res.error });
   }
@@ -54,18 +51,12 @@ export function ProfileEditor({
             className="rounded-xl border border-line bg-canvas px-3.5 py-2.5 outline-none focus:border-olive"
           />
         </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-muted">Роль</span>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="rounded-xl border border-line bg-canvas px-3.5 py-2.5 outline-none focus:border-olive"
-          >
-            <option value="user">Користувач</option>
-            <option value="admin">Адміністратор</option>
-          </select>
-        </label>
       </div>
+      {email.trim().toLowerCase() !== initialEmail && (
+        <p className="mt-3 text-sm text-muted">
+          Після зміни пошти користувача буде розлогінено, і він має підтвердити нову адресу.
+        </p>
+      )}
       <div className="mt-4 flex items-center gap-3">
         <button
           type="button"
@@ -77,6 +68,79 @@ export function ProfileEditor({
         </button>
         {msg && <span className={`text-sm ${msg.ok ? "text-olive" : "text-danger"}`}>{msg.text}</span>}
       </div>
+    </section>
+  );
+}
+
+export function RoleEditor({
+  userId,
+  role,
+  emailVerified,
+  isSelf,
+}: {
+  userId: string;
+  role: string;
+  emailVerified: boolean;
+  isSelf: boolean;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isAdmin = role === "admin";
+
+  async function apply() {
+    setBusy(true);
+    setError(null);
+    const res = await setUserRole(userId, isAdmin ? "user" : "admin");
+    setBusy(false);
+    setConfirming(false);
+    if (!res.ok) setError(res.error);
+  }
+
+  let note: string | null = null;
+  if (isSelf) note = "Це ваш акаунт. Власну роль змінити не можна.";
+  else if (!isAdmin && !emailVerified) note = "Адміністратором можна зробити лише після підтвердження пошти.";
+
+  return (
+    <section className="mt-6 rounded-2xl border border-line bg-paper p-5">
+      <h2 className="font-display text-sm font-semibold text-muted">Роль</h2>
+      <p className="mt-1">{isAdmin ? "Адміністратор" : "Користувач"}</p>
+      {note && <p className="mt-2 text-sm text-muted">{note}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {!note &&
+        (confirming ? (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium">
+              {isAdmin
+                ? "Зняти роль адміністратора?"
+                : "Зробити адміністратором? Він бачитиме всі анкети й зможе керувати користувачами."}
+            </span>
+            <button
+              type="button"
+              onClick={apply}
+              disabled={busy}
+              className="rounded-xl bg-olive px-4 py-2 text-sm font-medium text-olive-ink transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {busy ? "Збереження…" : "Так"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={busy}
+              className="rounded-xl border border-line px-4 py-2 text-sm hover:bg-canvas"
+            >
+              Скасувати
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="mt-4 rounded-xl border border-line px-4 py-2 text-sm font-medium transition-colors hover:bg-canvas"
+          >
+            {isAdmin ? "Зняти роль адміністратора" : "Зробити адміністратором"}
+          </button>
+        ))}
     </section>
   );
 }

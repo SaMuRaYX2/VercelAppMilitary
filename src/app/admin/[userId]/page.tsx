@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { pool } from "@/lib/db";
 import { getAdmin } from "@/lib/session";
 import { visitorLabel } from "@/lib/visitor";
-import { AnswersEditor, DeleteUserButton, ProfileEditor } from "./admin-controls";
+import { AnswersEditor, DeleteUserButton, ProfileEditor, RoleEditor } from "./admin-controls";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,8 @@ type Detail = {
 };
 
 export default async function RespondentPage({ params }: PageProps<"/admin/[userId]">) {
-  if (!(await getAdmin())) redirect("/");
+  const admin = await getAdmin();
+  if (!admin) redirect("/");
   const { userId } = await params;
 
   const { rows } = await pool.query<Detail>(
@@ -112,7 +113,8 @@ export default async function RespondentPage({ params }: PageProps<"/admin/[user
         </dl>
       </section>
 
-      <ProfileEditor userId={userId} name={d.name} email={d.email} role={d.role} />
+      <ProfileEditor userId={userId} name={d.name} email={d.email} />
+      <RoleEditor userId={userId} role={d.role} emailVerified={d.email_verified} isSelf={admin.id === userId} />
 
       <h2 className="mt-12 font-display text-lg font-semibold">Відповіді</h2>
       <p className="mt-1 text-sm text-muted">Зміни зберігаються автоматично.</p>
